@@ -61,6 +61,7 @@ export class AuthService {
   }
 
   async login(loginDto: LoginDto): Promise<AuthResponseDto> {
+    console.log("--------------------------------",loginDto);
     try {
       const { email, password } = loginDto;
 
@@ -70,7 +71,7 @@ export class AuthService {
       if (!user || !session) {
         throw new UnauthorizedException('Invalid credentials');
       }
-
+     console.log("--------------------------------",user);
       // Get user profile from our users table
       const userProfiles = await this.supabaseService.query('users', { id: user.id });
       const userProfile = userProfiles?.[0];

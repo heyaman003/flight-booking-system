@@ -5,11 +5,13 @@ export const fetchApi = async ({
   method = 'GET',
   data,
   token,
+  refreshToken
 }: {
   url: string;
   method?: 'GET' | 'POST' | 'PUT' | 'DELETE';
   data?: any;
   token?: string;
+  refreshToken?: string;
 }) => {
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
@@ -18,6 +20,9 @@ export const fetchApi = async ({
 
   if (token) {
     headers['Authorization'] = `Bearer ${token}`;
+  }
+  if (refreshToken) {
+    headers['x-refresh-token'] = `${refreshToken}`;
   }
 
   const response = await fetch(url, {

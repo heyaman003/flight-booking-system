@@ -12,6 +12,11 @@ export class FlightsController {
     const result = await this.flightsService.searchFlights(searchDto);
     return ApiResponseDto.success(result, 'Flights found successfully');
   }
+  @Get('all')
+  async getAllFlights(): Promise<ApiResponseDto<FlightDto[]>> {
+    const flights = await this.flightsService.getAllFlights();
+    return ApiResponseDto.success(flights, 'Flights retrieved successfully');
+  }
 
   @Get(':id')
   async getFlightById(@Param('id') id: string): Promise<ApiResponseDto<FlightDto>> {

@@ -1,7 +1,6 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { EventEmitterModule } from '@nestjs/event-emitter';
-import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
@@ -25,7 +24,7 @@ import configuration from './config/configuration';
     FlightsModule,
     BookingsModule,
   ],
-  controllers: [AppController, SseController],
+  controllers: [ SseController],
   providers: [AppService, SupabaseService, EmailService, SseService],
 })
 export class AppModule {}

@@ -99,4 +99,22 @@ export class FlightsService {
       available_seats: newAvailableSeats,
     });
   }
+  async getAllFlights(): Promise<FlightDto[]> {
+    const flights = await this.supabaseService.query('flights', {});
+    return flights.map((flight: any) => ({
+      id: flight.id,
+      flightNumber: flight.flight_number,
+      airline: flight.airline,
+      origin: flight.origin,
+      destination: flight.destination,
+      departureTime: flight.departure_time,
+      arrivalTime: flight.arrival_time,
+      duration: flight.duration,
+      price: flight.price,
+      availableSeats: flight.available_seats,
+      cabinClass: flight.cabin_class,
+      aircraft: flight.aircraft,
+      status: flight.status,
+    }));
+  }
 } 

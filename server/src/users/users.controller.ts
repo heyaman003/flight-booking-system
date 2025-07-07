@@ -1,10 +1,11 @@
-import { Controller, Get, Put, Body, UseGuards } from '@nestjs/common';
+import { Controller, Get, Put, Body, UseGuards, Post, Req } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { UpdateProfileDto, UserProfileDto } from './dto/user.dto';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
 import { ApiResponseDto } from '../common/dto/api-response.dto';
-
+import { ApiBearerAuth, ApiBody, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import {ChangePasswordDto} from './dto/user.dto';
 @Controller('users')
 @UseGuards(JwtAuthGuard)
 export class UsersController {
@@ -30,4 +31,21 @@ export class UsersController {
     const bookings = await this.usersService.getBookingHistory(user.id);
     return ApiResponseDto.success(bookings, 'Booking history retrieved successfully');
   }
+  
+@Post('change-password')
+@ApiBearerAuth()
+@ApiOperation({ summary: 'Change user password' })
+@ApiBody({ type: ChangePasswordDto })
+@ApiResponse({ status: 200, description: 'Password changed', type: ApiResponseDto })
+async changePassword(
+  @Body() dto: ChangePasswordDto,
+  @Req() req: Request
+): Promise<ApiResponseDto<any>> {
+  const userId = req['user']?.id;
+  const accessToken = req.headers['authorization']?.replace('Bearer ', '');
+  const refreshToken = req.headers['x-refresh-token'] as string;
+  // console.log("--------------------------------",refreshToken);
+  await this.usersService.changePassword(userId, dto, accessToken,refreshToken);
+  return ApiResponseDto.success(null, 'Password changed');
+}
 } 

@@ -7,11 +7,111 @@ import { Button } from "@/components/ui/button";
 import { User, Mail, LogOut, Plane, Calendar, MapPin } from "lucide-react";
 import { useUserBookings, useCancelBooking } from "@/hooks/useBookings";
 import { toast } from "sonner";
+import { useApiMutation } from '@/hooks/useApiMutation';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { useState } from 'react';
 
 export default function ProfilePage() {
   const { user, logout } = useAuth();
   const { data: bookings, isLoading: bookingsLoading } = useUserBookings();
   const cancelBooking = useCancelBooking();
+  const changePasswordMutation = useApiMutation();
+  const editProfileMutation = useApiMutation();
+
+  // Modal state for change password
+  const [showChangePassword, setShowChangePassword] = useState(false);
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [formError, setFormError] = useState('');
+
+  // Modal state for edit profile
+  const [showEditProfile, setShowEditProfile] = useState(false);
+  const [profileForm, setProfileForm] = useState({
+    firstName: user?.firstName || '',
+    lastName: user?.lastName || '',
+    phone: (user as any)?.phone || '',
+    address: (user as any)?.address || '',
+    city: (user as any)?.city || '',
+    country: (user as any)?.country || '',
+    postalCode: (user as any)?.postalCode || '',
+  });
+  const [profileError, setProfileError] = useState('');
+
+  // Handler for change password
+  const handleChangePassword = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    setFormError('');
+    if (!currentPassword || !newPassword) {
+      setFormError('Both fields are required');
+      return;
+    }
+    if (newPassword.length < 8) {
+      setFormError('New password must be at least 8 characters');
+      return;
+    }
+    const accessToken = localStorage.getItem('accessToken') || sessionStorage.getItem('accessToken') || '';
+    const refreshToken = localStorage.getItem('refreshToken') || sessionStorage.getItem('refreshToken') || '';
+    changePasswordMutation.mutate({
+      url: `${process.env.NEXT_PUBLIC_API_URL}/api/users/change-password`,
+      method: 'POST',
+      data: { currentPassword, newPassword },
+      token: accessToken,
+      refreshToken,
+    }, {
+      onSuccess: () => {
+        toast.success('Password changed successfully');
+        setShowChangePassword(false);
+        setCurrentPassword('');
+        setNewPassword('');
+      },
+      onError: (error: any) => {
+        setFormError(error?.message || 'Failed to change password');
+      },
+    });
+  };
+
+  // Handler for edit profile
+  const handleEditProfile = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    setProfileError('');
+    if (!profileForm.firstName || !profileForm.lastName || !profileForm.phone) {
+      setProfileError('First name, last name, and phone are required');
+      return;
+    }
+    const accessToken = localStorage.getItem('accessToken') || sessionStorage.getItem('accessToken') || '';
+    const refreshToken = localStorage.getItem('refreshToken') || sessionStorage.getItem('refreshToken') || '';
+    editProfileMutation.mutate({
+      url: `${process.env.NEXT_PUBLIC_API_URL}/api/users/profile`,
+      method: 'PUT',
+      data: profileForm,
+      token: accessToken,
+      refreshToken,
+    }, {
+      onSuccess: () => {
+        toast.success('Profile updated successfully');
+        setShowEditProfile(false);
+      },
+      onError: (error: any) => {
+        setProfileError(error?.message || 'Failed to update profile');
+      },
+    });
+  };
+
+  // Update form fields on open
+  const openEditProfile = () => {
+    setProfileForm({
+      firstName: user?.firstName || '',
+      lastName: user?.lastName || '',
+      phone: (user as any)?.phone || '',
+      address: (user as any)?.address || '',
+      city: (user as any)?.city || '',
+      country: (user as any)?.country || '',
+      postalCode: (user as any)?.postalCode || '',
+    });
+    setProfileError('');
+    setShowEditProfile(true);
+  };
 
   return (
     <ProtectedRoute>
@@ -54,10 +154,10 @@ export default function ProfilePage() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
-                  <Button variant="outline" className="w-full justify-start">
+                  <Button variant="outline" className="w-full justify-start" onClick={openEditProfile}>
                     Edit Profile
                   </Button>
-                  <Button variant="outline" className="w-full justify-start">
+                  <Button variant="outline" className="w-full justify-start" onClick={() => setShowChangePassword(true)}>
                     Change Password
                   </Button>
                   <Button variant="outline" className="w-full justify-start">
@@ -148,6 +248,120 @@ export default function ProfilePage() {
           </div>
         </div>
       </div>
+
+      {/* Change Password Modal */}
+      <Dialog open={showChangePassword} onOpenChange={setShowChangePassword}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Change Password</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleChangePassword} className="space-y-4">
+            <Input
+              type="password"
+              placeholder="Current Password"
+              value={currentPassword}
+              onChange={e => setCurrentPassword(e.target.value)}
+              disabled={changePasswordMutation.isPending}
+              autoFocus
+            />
+            <Input
+              type="password"
+              placeholder="New Password"
+              value={newPassword}
+              onChange={e => setNewPassword(e.target.value)}
+              disabled={changePasswordMutation.isPending}
+            />
+            {formError && <div className="text-red-500 text-sm">{formError}</div>}
+            <DialogFooter>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setShowChangePassword(false)}
+                disabled={changePasswordMutation.isPending}
+              >
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                disabled={changePasswordMutation.isPending}
+              >
+                {changePasswordMutation.isPending ? 'Changing...' : 'Change Password'}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Profile Modal */}
+      <Dialog open={showEditProfile} onOpenChange={setShowEditProfile}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit Profile</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleEditProfile} className="space-y-4">
+            <Input
+              placeholder="First Name"
+              value={profileForm.firstName}
+              onChange={e => setProfileForm(f => ({ ...f, firstName: e.target.value }))}
+              disabled={editProfileMutation.isPending}
+              autoFocus
+            />
+            <Input
+              placeholder="Last Name"
+              value={profileForm.lastName}
+              onChange={e => setProfileForm(f => ({ ...f, lastName: e.target.value }))}
+              disabled={editProfileMutation.isPending}
+            />
+            <Input
+              placeholder="Phone"
+              value={profileForm.phone}
+              onChange={e => setProfileForm(f => ({ ...f, phone: e.target.value }))}
+              disabled={editProfileMutation.isPending}
+            />
+            <Input
+              placeholder="Address"
+              value={profileForm.address}
+              onChange={e => setProfileForm(f => ({ ...f, address: e.target.value }))}
+              disabled={editProfileMutation.isPending}
+            />
+            <Input
+              placeholder="City"
+              value={profileForm.city}
+              onChange={e => setProfileForm(f => ({ ...f, city: e.target.value }))}
+              disabled={editProfileMutation.isPending}
+            />
+            <Input
+              placeholder="Country"
+              value={profileForm.country}
+              onChange={e => setProfileForm(f => ({ ...f, country: e.target.value }))}
+              disabled={editProfileMutation.isPending}
+            />
+            <Input
+              placeholder="Postal Code"
+              value={profileForm.postalCode}
+              onChange={e => setProfileForm(f => ({ ...f, postalCode: e.target.value }))}
+              disabled={editProfileMutation.isPending}
+            />
+            {profileError && <div className="text-red-500 text-sm">{profileError}</div>}
+            <DialogFooter>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setShowEditProfile(false)}
+                disabled={editProfileMutation.isPending}
+              >
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                disabled={editProfileMutation.isPending}
+              >
+                {editProfileMutation.isPending ? 'Saving...' : 'Save Changes'}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </ProtectedRoute>
   );
 } 
