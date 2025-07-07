@@ -1,16 +1,38 @@
-import { Injectable, ExecutionContext, UnauthorizedException } from '@nestjs/common';
-import { AuthGuard } from '@nestjs/passport';
+import { Injectable, ExecutionContext, UnauthorizedException, CanActivate } from '@nestjs/common';
+import { SupabaseService } from '../../config/supabase.service';
 
 @Injectable()
-export class JwtAuthGuard extends AuthGuard('jwt') {
-  canActivate(context: ExecutionContext) {
-    return super.canActivate(context);
-  }
+export class JwtAuthGuard implements CanActivate {
+  constructor(private supabaseService: SupabaseService) {}
 
-  handleRequest(err: any, user: any, info: any) {
-    if (err || !user) {
-      throw err || new UnauthorizedException('Invalid token');
+  async canActivate(context: ExecutionContext): Promise<boolean> {
+    const request = context.switchToHttp().getRequest();
+    const authHeader = request.headers.authorization;
+
+    if (!authHeader) {
+      throw new UnauthorizedException('No authorization header');
     }
-    return user;
+
+    const token = authHeader.replace('Bearer ', '');
+    
+    try {
+      const user = await this.supabaseService.getUser(token);
+      if (!user) {
+        throw new UnauthorizedException('Invalid token');
+      }
+
+      // Get user profile from our users table
+      const userProfiles = await this.supabaseService.query('users', { id: user.id });
+      const userProfile = userProfiles?.[0];
+
+      // Attach user to request
+      request.user = {
+        ...user,
+        profile: userProfile,
+      };
+      return true;
+    } catch (error) {
+      throw new UnauthorizedException('Invalid token');
+    }
   }
 } 

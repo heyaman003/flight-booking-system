@@ -1,32 +1,113 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { createClient, SupabaseClient } from '@supabase/supabase-js';
+import { createClient, SupabaseClient, User } from '@supabase/supabase-js';
 
 @Injectable()
 export class SupabaseService {
   private readonly logger = new Logger(SupabaseService.name);
   private supabase: SupabaseClient;
+  private supabaseAuth: SupabaseClient;
 
   constructor(private configService: ConfigService) {
     const url = this.configService.get<string>('supabase.url');
-    const key = this.configService.get<string>('supabase.serviceRoleKey');
+    const serviceKey = this.configService.get<string>('supabase.serviceRoleKey');
+    const anonKey = this.configService.get<string>('supabase.anonKey');
 
-    if (!url || !key) {
-      this.logger.error('Supabase URL or Service Role Key not found in config');
+    if (!url || !serviceKey || !anonKey) {
+      this.logger.error('Supabase configuration incomplete');
       throw new Error('Missing Supabase configuration');
     }
 
-    this.supabase = createClient(url, key);
+    // Service role client for admin operations
+    this.supabase = createClient(url, serviceKey);
+    
+    // Anon client for auth operations
+    this.supabaseAuth = createClient(url, anonKey);
 
-    // Log the initialization
-    this.logger.log('Supabase client initialized');
-
-    // Optionally test a lightweight query
+    this.logger.log('Supabase clients initialized');
     this.testConnection();
   }
 
   getClient(): SupabaseClient {
     return this.supabase;
+  }
+
+  getAuthClient(): SupabaseClient {
+    return this.supabaseAuth;
+  }
+
+  // Authentication methods
+  async signUp(email: string, password: string, userData?: any) {
+    const { data, error } = await this.supabaseAuth.auth.signUp({
+      email,
+      password,
+      options: {
+        data: userData
+      }
+    });
+    
+    if (error) throw error;
+    return data;
+  }
+
+  async signIn(email: string, password: string) {
+    const { data, error } = await this.supabaseAuth.auth.signInWithPassword({
+      email,
+      password
+    });
+    
+    if (error) throw error;
+    return data;
+  }
+
+  async signOut() {
+    const { error } = await this.supabaseAuth.auth.signOut();
+    if (error) throw error;
+    return { success: true };
+  }
+
+  async getUser(token: string) {
+    const { data: { user }, error } = await this.supabaseAuth.auth.getUser(token);
+    if (error) throw error;
+    return user;
+  }
+
+  async refreshToken(refreshToken: string) {
+    const { data, error } = await this.supabaseAuth.auth.refreshSession({
+      refresh_token: refreshToken
+    });
+    if (error) throw error;
+    return data;
+  }
+
+  // Create user profile in your users table
+  async createUserProfile(supabaseUser: User, profileData?: any) {
+    const userProfile = {
+      id: supabaseUser.id,
+      email: supabaseUser.email,
+      first_name: profileData?.firstName || supabaseUser.user_metadata?.first_name || '',
+      last_name: profileData?.lastName || supabaseUser.user_metadata?.last_name || '',
+      phone: profileData?.phone || supabaseUser.user_metadata?.phone || null,
+      address: profileData?.address || null,
+      city: profileData?.city || null,
+      country: profileData?.country || null,
+      postal_code: profileData?.postalCode || null,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    };
+
+    const { data, error } = await this.supabase
+      .from('users')
+      .insert(userProfile)
+      .select()
+      .single();
+
+    if (error) {
+      this.logger.error('Failed to create user profile:', error);
+      throw error;
+    }
+
+    return data;
   }
 
   private async testConnection() {

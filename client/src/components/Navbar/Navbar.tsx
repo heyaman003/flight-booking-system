@@ -4,13 +4,15 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { Plane, Menu, X } from "lucide-react";
+import { Plane, Menu, X, User, LogOut } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/contexts/AuthContext";
 
 export const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const router = useRouter();
   const pathname = usePathname();
+  const { user, isAuthenticated, logout } = useAuth();
 
   const isActive = (path: string) => pathname === path;
 
@@ -48,8 +50,27 @@ export const Header = () => {
           </nav>
 
           <div className="hidden md:flex items-center space-x-4">
-            <Button variant="ghost">Sign In</Button>
-            <Button className="bg-blue-600 hover:bg-blue-700">Sign Up</Button>
+            {isAuthenticated ? (
+              <div className="flex items-center space-x-4">
+                <div className="flex items-center space-x-2 text-sm text-gray-700">
+                  <User className="h-4 w-4" />
+                  <span>Welcome, {user?.firstName}</span>
+                </div>
+                <Button 
+                  variant="ghost" 
+                  onClick={logout}
+                  className="flex items-center space-x-2"
+                >
+                  <LogOut className="h-4 w-4" />
+                  <span>Logout</span>
+                </Button>
+              </div>
+            ) : (
+              <>
+                <Button variant="ghost" onClick={() => router.push('/login')}>Sign In</Button>
+                <Button className="bg-blue-600 hover:bg-blue-700" onClick={() => router.push('/login')}>Sign Up</Button>
+              </>
+            )}
           </div>
 
           {/* Mobile menu button */}
@@ -81,8 +102,27 @@ export const Header = () => {
                 </Link>
               ))}
               <div className="px-3 py-2 space-y-2">
-                <Button variant="ghost" className="w-full">Sign In</Button>
-                <Button className="w-full bg-blue-600 hover:bg-blue-700">Sign Up</Button>
+                {isAuthenticated ? (
+                  <>
+                    <div className="flex items-center space-x-2 text-sm text-gray-700 px-3 py-2">
+                      <User className="h-4 w-4" />
+                      <span>Welcome, {user?.firstName}</span>
+                    </div>
+                    <Button 
+                      variant="ghost" 
+                      className="w-full flex items-center justify-center space-x-2"
+                      onClick={logout}
+                    >
+                      <LogOut className="h-4 w-4" />
+                      <span>Logout</span>
+                    </Button>
+                  </>
+                ) : (
+                  <>
+                    <Button variant="ghost" className="w-full" onClick={() => router.push('/login')}>Sign In</Button>
+                    <Button className="w-full bg-blue-600 hover:bg-blue-700" onClick={() => router.push('/login')}>Sign Up</Button>
+                  </>
+                )}
               </div>
             </div>
           </div>

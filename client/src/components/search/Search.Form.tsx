@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -6,6 +6,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Card, CardContent } from "@/components/ui/card";
 import { Calendar, MapPin, Users, Plane } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { Autocomplete } from "@/components/ui/autocomplete";
+import { useAirportSearch, Airport } from "@/hooks/useAirports";
 
 interface SearchFormProps {
   onSearch?: (params: any) => void;
@@ -23,9 +25,44 @@ export const SearchForm = ({ onSearch, compact = false }: SearchFormProps) => {
     class: "economy",
   });
 
+  // Airport search hooks
+  const { data: originAirports, isLoading: originLoading } = useAirportSearch(searchParams.origin);
+  const { data: destinationAirports, isLoading: destinationLoading } = useAirportSearch(searchParams.destination);
+
+  // Filter out the selected airport from the other field's suggestions
+  const filteredOriginAirports = useMemo(() => {
+    if (!originAirports) return [];
+    return originAirports.filter(airport => 
+      airport.code !== searchParams.destination && 
+      airport.name !== searchParams.destination
+    );
+  }, [originAirports, searchParams.destination]);
+
+  const filteredDestinationAirports = useMemo(() => {
+    if (!destinationAirports) return [];
+    return destinationAirports.filter(airport => 
+      airport.code !== searchParams.origin && 
+      airport.name !== searchParams.origin
+    );
+  }, [destinationAirports, searchParams.origin]);
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     onSearch?.(searchParams);
+  };
+
+  const handleOriginSelect = (airport: Airport) => {
+    setSearchParams(prev => ({
+      ...prev,
+      origin: airport.code
+    }));
+  };
+
+  const handleDestinationSelect = (airport: Airport) => {
+    setSearchParams(prev => ({
+      ...prev,
+      destination: airport.code
+    }));
   };
 
   return (
@@ -55,31 +92,27 @@ export const SearchForm = ({ onSearch, compact = false }: SearchFormProps) => {
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="origin" className="flex items-center gap-2">
-                  <MapPin className="h-4 w-4" />
-                  From
-                </Label>
-                <Input
-                  id="origin"
-                  placeholder="New York (JFK)"
-                  value={searchParams.origin}
-                  onChange={(e) => setSearchParams({...searchParams, origin: e.target.value})}
-                />
-              </div>
+              <Autocomplete
+                label="From"
+                placeholder="Search airports (e.g., JFK, LAX)"
+                value={searchParams.origin}
+                onChange={(value) => setSearchParams({...searchParams, origin: value})}
+                onSelect={handleOriginSelect}
+                options={filteredOriginAirports}
+                loading={originLoading}
+                error={searchParams.origin && filteredOriginAirports.length === 0 ? 'No airports found' : undefined}
+              />
               
-              <div className="space-y-2">
-                <Label htmlFor="destination" className="flex items-center gap-2">
-                  <MapPin className="h-4 w-4" />
-                  To
-                </Label>
-                <Input
-                  id="destination"
-                  placeholder="Los Angeles (LAX)"
-                  value={searchParams.destination}
-                  onChange={(e) => setSearchParams({...searchParams, destination: e.target.value})}
-                />
-              </div>
+              <Autocomplete
+                label="To"
+                placeholder="Search airports (e.g., JFK, LAX)"
+                value={searchParams.destination}
+                onChange={(value) => setSearchParams({...searchParams, destination: value})}
+                onSelect={handleDestinationSelect}
+                options={filteredDestinationAirports}
+                loading={destinationLoading}
+                error={searchParams.destination && filteredDestinationAirports.length === 0 ? 'No airports found' : undefined}
+              />
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">

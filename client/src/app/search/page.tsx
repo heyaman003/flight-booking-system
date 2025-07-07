@@ -3,23 +3,11 @@ import { useState } from "react";
 import { SearchForm } from "@/components/search/Search.Form";
 import { FlightResults } from "@/components/search/Flight.Results";
 import { SearchFilters } from "@/components/search/Search.Filters";
-type MockResult = {
-    id: string;
-    flightNumber: string;
-    airline: string;
-    origin: string;
-    destination: string;
-    departureTime: string;
-    arrivalTime: string;
-    duration: string;
-    price: number;
-    class: string;
-    stops: number;
-};
+import { ProtectedRoute } from "@/components/ProtectedRoute";
+import { useFlightSearch, FlightSearchDto, FlightDto } from "@/hooks/useFlightSearch";
 
 const Page = () => {
-  const [searchResults, setSearchResults] = useState<MockResult[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [searchParams, setSearchParams] = useState<FlightSearchDto | null>(null);
   const [filters, setFilters] = useState({
     airline: "",
     priceRange: [0, 2000],
@@ -27,74 +15,53 @@ const Page = () => {
     duration: "",
   });
 
-  const handleSearch = async (searchParams: any) => {
-    setLoading(true);
-    // Simulate API call
-    setTimeout(() => {
-      const mockResults = [
-        {
-          id: "1",
-          flightNumber: "UA1234",
-          airline: "United Airlines",
-          origin: "JFK",
-          destination: "LAX",
-          departureTime: "08:30",
-          arrivalTime: "11:45",
-          duration: "5h 15m",
-          price: 299,
-          class: "Economy",
-          stops: 0,
-        },
-        {
-          id: "2",
-          flightNumber: "AA5678",
-          airline: "American Airlines",
-          origin: "JFK",
-          destination: "LAX",
-          departureTime: "14:20",
-          arrivalTime: "17:30",
-          duration: "5h 10m",
-          price: 349,
-          class: "Economy",
-          stops: 0,
-        },
-        {
-          id: "3",
-          flightNumber: "DL9012",
-          airline: "Delta Airlines",
-          origin: "JFK",
-          destination: "LAX",
-          departureTime: "19:15",
-          arrivalTime: "22:25",
-          duration: "5h 10m",
-          price: 279,
-          class: "Economy",
-          stops: 0,
-        },
-      ];
-      setSearchResults(mockResults);
-      setLoading(false);
-    }, 1500);
+  // Use the flight search hook with caching
+  const { data: searchData, isLoading, error } = useFlightSearch(searchParams);
+
+  const handleSearch = async (searchData: any) => {
+    // Transform the search form data to match the API format
+    const apiSearchParams: FlightSearchDto = {
+      origin: searchData.origin,
+      destination: searchData.destination,
+      departureDate: searchData.departureDate,
+      returnDate: searchData.returnDate,
+      passengers: parseInt(searchData.passengers) || 1,
+      cabinClass: searchData.class || 'economy',
+    };
+    
+    setSearchParams(apiSearchParams);
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="container mx-auto px-4 py-8">
-        <div className="mb-8">
-          <SearchForm onSearch={handleSearch} compact />
-        </div>
-        
-        <div className="flex gap-8">
-          <div className="w-1/4">
-            <SearchFilters filters={filters} onFiltersChange={setFilters} />
+    <ProtectedRoute>
+      <div className="min-h-screen bg-gray-50">
+        <div className="container mx-auto px-4 py-8">
+          <div className="mb-8">
+            <SearchForm onSearch={handleSearch} compact />
           </div>
           
-          <div className="flex-1">
-            <FlightResults results={searchResults} loading={loading} />
+          {error && (
+            <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg">
+              <p className="text-red-600">Error loading flights: {error.message}</p>
+            </div>
+          )}
+          
+          <div className="flex gap-8">
+            <div className="w-1/4">
+              <SearchFilters filters={filters} onFiltersChange={setFilters} />
+            </div>
+            
+            <div className="flex-1">
+              <FlightResults 
+                results={searchData?.flights || []} 
+                loading={isLoading}
+                passengers={searchParams?.passengers || 1}
+              />
+            </div>
           </div>
         </div>
       </div>
-    </div>
+    </ProtectedRoute>
   );
 };
 

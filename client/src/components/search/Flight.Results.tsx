@@ -1,29 +1,39 @@
+import { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Plane, Clock, ArrowRight } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { BookingModal } from "./BookingModal";
+import { FlightDto } from "@/hooks/useFlightSearch";
 
-interface Flight {
-  id: string;
-  flightNumber: string;
-  airline: string;
-  origin: string;
-  destination: string;
-  departureTime: string;
-  arrivalTime: string;
-  duration: string;
-  price: number;
-  class: string;
-  stops: number;
-}
+type Flight = FlightDto;
+
+// Helper function to format duration from minutes to readable format
+const formatDuration = (minutes: number): string => {
+  const hours = Math.floor(minutes / 60);
+  const mins = minutes % 60;
+  return `${hours}h ${mins}m`;
+};
+
+// Helper function to format time from ISO string
+const formatTime = (isoString: string): string => {
+  return new Date(isoString).toLocaleTimeString('en-US', {
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false
+  });
+};
 
 interface FlightResultsProps {
   results: Flight[];
   loading: boolean;
+  passengers?: number;
 }
 
-export const FlightResults = ({ results, loading }: FlightResultsProps) => {
+export const FlightResults = ({ results, loading, passengers = 1 }: FlightResultsProps) => {
+  const [selectedFlight, setSelectedFlight] = useState<Flight | null>(null);
+  const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
   if (loading) {
     return (
       <div className="space-y-4">
@@ -81,12 +91,12 @@ export const FlightResults = ({ results, loading }: FlightResultsProps) => {
                   <div className="flex items-center gap-4 mb-4">
                     <div className="text-sm text-gray-600">{flight.airline}</div>
                     <Badge variant="secondary">{flight.flightNumber}</Badge>
-                    {flight.stops === 0 && <Badge variant="outline">Nonstop</Badge>}
+                    <Badge variant="outline">Nonstop</Badge>
                   </div>
                   
                   <div className="flex items-center gap-8">
                     <div className="text-center">
-                      <div className="text-2xl font-bold">{flight.departureTime}</div>
+                      <div className="text-2xl font-bold">{formatTime(flight.departureTime)}</div>
                       <div className="text-sm text-gray-600">{flight.origin}</div>
                     </div>
                     
@@ -94,14 +104,14 @@ export const FlightResults = ({ results, loading }: FlightResultsProps) => {
                       <div className="flex items-center gap-2 text-sm text-gray-600">
                         <div className="h-px bg-gray-300 flex-1"></div>
                         <Clock className="h-4 w-4" />
-                        <span>{flight.duration}</span>
+                        <span>{formatDuration(flight.duration)}</span>
                         <div className="h-px bg-gray-300 flex-1"></div>
                         <ArrowRight className="h-4 w-4" />
                       </div>
                     </div>
                     
                     <div className="text-center">
-                      <div className="text-2xl font-bold">{flight.arrivalTime}</div>
+                      <div className="text-2xl font-bold">{formatTime(flight.arrivalTime)}</div>
                       <div className="text-sm text-gray-600">{flight.destination}</div>
                     </div>
                   </div>
@@ -109,8 +119,14 @@ export const FlightResults = ({ results, loading }: FlightResultsProps) => {
                 
                 <div className="text-right ml-8">
                   <div className="text-3xl font-bold text-blue-600">${flight.price}</div>
-                  <div className="text-sm text-gray-600 mb-4">{flight.class}</div>
-                  <Button className="bg-blue-600 hover:bg-blue-700">
+                  <div className="text-sm text-gray-600 mb-4">{flight.cabinClass}</div>
+                  <Button 
+                    className="bg-blue-600 hover:bg-blue-700"
+                    onClick={() => {
+                      setSelectedFlight(flight);
+                      setIsBookingModalOpen(true);
+                    }}
+                  >
                     Select Flight
                   </Button>
                 </div>
@@ -119,6 +135,16 @@ export const FlightResults = ({ results, loading }: FlightResultsProps) => {
           </Card>
         ))}
       </div>
+      
+      <BookingModal
+        flight={selectedFlight}
+        isOpen={isBookingModalOpen}
+        onClose={() => {
+          setIsBookingModalOpen(false);
+          setSelectedFlight(null);
+        }}
+        passengers={passengers}
+      />
     </div>
   );
 };
