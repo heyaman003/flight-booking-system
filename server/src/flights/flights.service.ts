@@ -90,7 +90,7 @@ export class FlightsService {
   }
 
   async updateAvailableSeats(flightId: string, seatsToReduce: number): Promise<void> {
-    const flights = await this.supabaseService.query('flights', { id: flightId });
+    const flights = await this.supabaseService.query('flight_denormalized', { id: flightId });
     if (!flights || flights.length === 0) {
       throw new Error('Flight not found');
     }
@@ -98,9 +98,14 @@ export class FlightsService {
     const flight = flights[0];
     const newAvailableSeats = Math.max(0, flight.available_seats - seatsToReduce);
     
-    await this.supabaseService.update('flights', flightId, {
-      available_seats: newAvailableSeats,
-    });
+    try {
+      await this.supabaseService.update('flights', flightId, {
+        available_seats: newAvailableSeats,
+      });
+    } catch (error) {
+      console.log(error)
+    }
+    
   }
   async getAllFlights(): Promise<FlightDto[]> {
     const flights = await this.supabaseService.query('flights', {});

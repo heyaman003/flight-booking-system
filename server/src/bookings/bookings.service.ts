@@ -213,7 +213,7 @@ export class BookingsService {
     if (booking.status === BookingStatus.CANCELLED) {
       throw new BadRequestException('Booking is already cancelled');
     }
-
+    // console.log("booking found",booking)
     // Update booking status to cancelled
     const updatedBooking = await this.updateBooking(bookingId, { status: BookingStatus.CANCELLED });
 

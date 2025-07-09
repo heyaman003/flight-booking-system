@@ -8,6 +8,7 @@ export class SseService {
   constructor(private eventEmitter: EventEmitter2) {}
 
   addClient(clientId: string, response: any) {
+    console.log("i am being called ----")
     this.clients.set(clientId, response);
     
     // Set headers for SSE

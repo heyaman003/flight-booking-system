@@ -187,3 +187,30 @@ graph TD
 - **Redux Store**: May be updated with new user info after edits.
 
 --- 
+
+# Architecture Overview
+
+## Real-Time Updates with Server-Sent Events (SSE)
+
+### Backend (NestJS)
+- The backend exposes an SSE endpoint at `/sse/connect/:clientId` via the `SseController`.
+- When a client connects, the `SseService` manages the connection and keeps a map of connected clients.
+- The backend can broadcast events (such as `flight_update` or `booking_update`) to all connected clients or send targeted messages.
+- Example events:
+  - `flight_update`: Sent when a flight's status or details change.
+  - `booking_update`: Sent when a booking is created, updated, or cancelled.
+
+### Frontend (Next.js/React)
+- The frontend uses a custom React hook (`useSSE`) to connect to the SSE endpoint with a unique `clientId` (e.g., user ID or session ID).
+- The hook listens for incoming events and triggers a callback for each event received.
+- The app can show toast notifications, update UI state, or trigger other actions in response to real-time events.
+
+### Example Usage
+- When a flight is updated on the backend, all connected clients receive a `flight_update` event in real time.
+- When a user's booking changes, the frontend can show a toast or update the booking list immediately.
+
+### Benefits
+- Provides real-time feedback to users without polling.
+- Scalable for many clients with minimal server overhead.
+
+--- 

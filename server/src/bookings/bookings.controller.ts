@@ -109,6 +109,7 @@ export class BookingsController {
     @Param('id') id: string,
   ): Promise<ApiResponseDto<BookingDto>> {
     const booking = await this.bookingsService.cancelBooking(id);
+    console.log("booking response ",booking)
     return ApiResponseDto.success(booking, 'Booking cancelled successfully');
   }
 }

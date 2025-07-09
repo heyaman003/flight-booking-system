@@ -1,5 +1,6 @@
 import { useMutation } from '@tanstack/react-query';
 import { fetchApi } from '@/utils/fetch.utils';
+import { toast } from 'sonner';
 
 interface ApiMutationOptions {
   url: string;
@@ -22,6 +23,9 @@ export function useApiMutation() {
         refreshToken,
         // You can extend fetchApi to use headers if needed
       });
+    },
+    onError: (error: any) => {
+      toast.error(error?.message || 'API request failed. Please try again.');
     },
   });
 }

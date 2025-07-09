@@ -17,9 +17,9 @@ export const API_CONFIG = {
     
     // Booking endpoints
     BOOKINGS: '/api/bookings',
-    USER_BOOKINGS: '/api/bookings/user',
+    USER_BOOKINGS: '/api/bookings',
     BOOKING_BY_ID: (id: string) => `/api/bookings/${id}`,
-    CANCEL_BOOKING: (id: string) => `/api/bookings/${id}/cancel`,
+    CANCEL_BOOKING: (id: string) => `/api/bookings/${id}`,
   },
   CACHE_TIMES: {
     FLIGHTS: 5 * 60 * 1000, // 5 minutes

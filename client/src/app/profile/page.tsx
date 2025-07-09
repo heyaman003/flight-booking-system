@@ -160,9 +160,6 @@ export default function ProfilePage() {
                   <Button variant="outline" className="w-full justify-start" onClick={() => setShowChangePassword(true)}>
                     Change Password
                   </Button>
-                  <Button variant="outline" className="w-full justify-start">
-                    Notification Settings
-                  </Button>
                   <Button 
                     variant="destructive" 
                     className="w-full justify-start"
@@ -194,15 +191,15 @@ export default function ProfilePage() {
                             <Plane className="h-5 w-5 text-blue-600" />
                             <span className="font-semibold">{booking.bookingReference}</span>
                             <span className={`px-2 py-1 rounded-full text-xs ${
-                              booking.status === 'CONFIRMED' ? 'bg-green-100 text-green-800' :
-                              booking.status === 'PENDING' ? 'bg-yellow-100 text-yellow-800' :
+                              booking.status === 'confirmed' ? 'bg-green-100 text-green-800' :
+                              booking.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
                               'bg-red-100 text-red-800'
                             }`}>
                               {booking.status}
                             </span>
                           </div>
                           <div className="text-right">
-                            <p className="font-bold text-lg">${booking.totalPrice}</p>
+                            <p className="font-bold text-lg">₹{booking.totalPrice}</p>
                             <p className="text-sm text-gray-600">{booking.passengers.length} passengers</p>
                           </div>
                         </div>
@@ -218,7 +215,7 @@ export default function ProfilePage() {
                           </div>
                         </div>
                         
-                        {booking.status !== 'CANCELLED' && (
+                        {booking.status !== 'cancelled' && (
                           <Button
                             variant="outline"
                             size="sm"

@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { fetchApi } from '@/utils/fetch.utils';
 import { API_CONFIG, buildApiUrl } from '@/config/api.config';
+import { toast } from 'sonner';
 
 // Types
 export interface PassengerDto {
@@ -62,6 +63,9 @@ export const useCreateBooking = () => {
       // Invalidate and refetch user bookings
       queryClient.invalidateQueries({ queryKey: ['bookings', 'user'] });
     },
+    onError: (error: any) => {
+      toast.error(error?.message || 'Failed to create booking');
+    },
   });
 };
 
@@ -122,7 +126,7 @@ export const useCancelBooking = () => {
     mutationFn: async (bookingId: string): Promise<BookingDto> => {
       const response = await fetchApi({
         url: buildApiUrl(API_CONFIG.ENDPOINTS.CANCEL_BOOKING(bookingId)),
-        method: 'POST',
+        method: 'DELETE',
       });
 
       // Handle the API response format
@@ -135,6 +139,9 @@ export const useCancelBooking = () => {
     onSuccess: () => {
       // Invalidate and refetch user bookings
       queryClient.invalidateQueries({ queryKey: ['bookings', 'user'] });
+    },
+    onError: (error: any) => {
+      toast.error(error?.message || 'Failed to cancel booking');
     },
   });
 }; 

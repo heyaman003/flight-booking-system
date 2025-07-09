@@ -2,6 +2,7 @@ import { useMutation } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
 import { fetchApi } from '@/utils/fetch.utils';
 import { useAuth } from '@/contexts/AuthContext';
+import { toast } from 'sonner';
 
 interface AuthFormData {
   email: string;
@@ -63,6 +64,7 @@ export const useAuthMutation = (type: AuthType) => {
     },
     onError: (error: any) => {
       console.error(`${type} error:`, error.message);
+      toast.error(error?.message || `${type} failed. Please try again.`);
     },
   });
 };

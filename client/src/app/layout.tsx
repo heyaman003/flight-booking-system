@@ -1,11 +1,13 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+// import ThemeToggle from "@/components/ThemeToggle";
 import "./globals.css";
 import { Toaster } from "@/components/ui/sonner";
 import { Header } from "@/components/Navbar/Navbar";
 import Providers from "./provider";
 import ReduxProvider from './provider';
 import { AuthProvider } from "@/contexts/AuthContext";
+import SSEWrapper from "./SSEWrapper";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -37,6 +39,8 @@ export default function RootLayout({
           <Providers>
             <Header/>
             <Toaster />
+            {/* <ThemeToggle /> */}
+            <SSEWrapper />
             {children}
           </Providers>
         </ReduxProvider>
