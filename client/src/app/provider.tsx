@@ -1,17 +1,17 @@
 'use client';
 
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { ReactNode, useState } from 'react';
-import { AuthProvider } from '@/contexts/AuthContext';
+import { Provider as ReduxProvider } from 'react-redux';
+import { store} from '../store';
 
-export default function Providers({ children }: { children: ReactNode }) {
-  // Create the QueryClient only once per app instance
-  const [queryClient] = useState(() => new QueryClient());
+const queryClient = new QueryClient();
+
+export default function Providers({ children }: { children: React.ReactNode }) {
   return (
-    <QueryClientProvider client={queryClient}>
-      <AuthProvider>
+    <ReduxProvider store={store}>
+      <QueryClientProvider client={queryClient}>
         {children}
-      </AuthProvider>
-    </QueryClientProvider>
+      </QueryClientProvider>
+    </ReduxProvider>
   );
 }

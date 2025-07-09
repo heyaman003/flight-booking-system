@@ -5,7 +5,12 @@ import { Badge } from "@/components/ui/badge";
 import { Plane, Clock, ArrowRight } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { BookingModal } from "./BookingModal";
-import { FlightDto } from "@/hooks/useFlightSearch";
+import { FlightDto as OriginalFlightDto } from "@/hooks/useFlightSearch";
+
+// Extend FlightDto to include airline_name (optional)
+interface FlightDto extends OriginalFlightDto {
+  airline_name?: string;
+}
 
 type Flight = FlightDto;
 
@@ -29,11 +34,65 @@ interface FlightResultsProps {
   results: Flight[];
   loading: boolean;
   passengers?: number;
+  filters: {
+    priceRange: [number, number];
+    airlines: string[];
+    departureTime?: string; // 'morning' | 'afternoon' | 'evening' | 'night' | undefined
+    stops?: string[]; // ['nonstop', '1stop', '2stops']
+  };
 }
 
-export const FlightResults = ({ results, loading, passengers = 1 }: FlightResultsProps) => {
+export const FlightResults = ({ results, loading, passengers = 1, filters }: FlightResultsProps) => {
   const [selectedFlight, setSelectedFlight] = useState<Flight | null>(null);
   const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
+  const [sortType, setSortType] = useState<'price' | 'duration'>('price');
+
+  // Helper to check stops
+  const getStops = (flight: Flight) => {
+    // For demo: always Nonstop, but you can add stops property to Flight if available
+    // e.g., return flight.stops;
+    return 'nonstop';
+  };
+
+  // Helper to check departure time window
+  const isInDepartureWindow = (isoString: string, window?: string) => {
+    if (!window) return true;
+    const hour = new Date(isoString).getHours();
+    if (window === 'morning') return hour >= 6 && hour < 12;
+    if (window === 'afternoon') return hour >= 12 && hour < 18;
+    if (window === 'evening') return hour >= 18 && hour < 24;
+    if (window === 'night') return hour >= 0 && hour < 6;
+    return true;
+  };
+
+  // Filtering logic
+  let filteredResults = results.filter(flight => {
+    // Price range
+    // If priceRange is not set or covers all prices, do not filter by price
+    if (
+      Array.isArray(filters.priceRange) &&
+      filters.priceRange.length === 2 &&
+      (filters.priceRange[0] !== 0 || filters.priceRange[1] !==0)
+    ) {
+      if (flight.price < filters.priceRange[0] || flight.price > filters.priceRange[1]) return false;
+    }
+    // Airlines
+    if (filters.airlines && filters.airlines.length > 0 && !filters.airlines.includes(flight.airline_name || '')) return false;
+    // Departure time
+    if (!isInDepartureWindow(flight.departureTime, filters.departureTime)) return false;
+    // Stops
+    if (filters.stops && filters.stops.length > 0 && !filters.stops.includes(getStops(flight))) return false;
+    return true;
+  });
+
+  // Sort flights based on sortType
+  let sortedResults = [...filteredResults];
+  if (sortType === 'price') {
+    sortedResults.sort((a, b) => a.price - b.price);
+  } else if (sortType === 'duration') {
+    sortedResults.sort((a, b) => a.duration - b.duration);
+  }
+
   if (loading) {
     return (
       <div className="space-y-4">
@@ -62,7 +121,7 @@ export const FlightResults = ({ results, loading, passengers = 1 }: FlightResult
     );
   }
 
-  if (results.length === 0) {
+  if (sortedResults.length === 0) {
     return (
       <div className="text-center py-12">
         <Plane className="h-16 w-16 mx-auto text-gray-400 mb-4" />
@@ -75,21 +134,33 @@ export const FlightResults = ({ results, loading, passengers = 1 }: FlightResult
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold">{results.length} flights found</h2>
+        <h2 className="text-2xl font-bold">{sortedResults.length} flights found</h2>
         <div className="flex gap-2">
-          <Button variant="outline" size="sm">Sort by Price</Button>
-          <Button variant="outline" size="sm">Sort by Duration</Button>
+          <Button 
+            variant={sortType === 'price' ? 'default' : 'outline'} 
+            size="sm"
+            onClick={() => setSortType(sortType === 'price' ? 'duration' : 'price')}
+          >
+            Sort by Price
+          </Button>
+          <Button 
+            variant={sortType === 'duration' ? 'default' : 'outline'} 
+            size="sm"
+            onClick={() => setSortType(sortType === 'duration' ? 'price' : 'duration')}
+          >
+            Sort by Duration
+          </Button>
         </div>
       </div>
 
       <div className="space-y-4">
-        {results.map((flight) => (
-          <Card key={flight.id} className="hover:shadow-lg transition-shadow duration-200">
+        {sortedResults.map((flight) => (
+          <Card  key={`${flight.id}-${flight.cabinClass}`} className="hover:shadow-lg transition-shadow duration-200">
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div className="flex-1">
                   <div className="flex items-center gap-4 mb-4">
-                    <div className="text-sm text-gray-600">{flight.airline}</div>
+                    <div className="text-sm text-gray-600">{flight.airline_name || 'N/A'}</div>
                     <Badge variant="secondary">{flight.flightNumber}</Badge>
                     <Badge variant="outline">Nonstop</Badge>
                   </div>
@@ -118,7 +189,7 @@ export const FlightResults = ({ results, loading, passengers = 1 }: FlightResult
                 </div>
                 
                 <div className="text-right ml-8">
-                  <div className="text-3xl font-bold text-blue-600">${flight.price}</div>
+                  <div className="text-3xl font-bold text-blue-600">₹{flight.price}</div>
                   <div className="text-sm text-gray-600 mb-4">{flight.cabinClass}</div>
                   <Button 
                     className="bg-blue-600 hover:bg-blue-700"

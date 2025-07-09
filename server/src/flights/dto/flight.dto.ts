@@ -2,10 +2,10 @@ import { IsString, IsDateString, IsNumber, IsEnum, IsOptional, Min, Max } from '
 import { Type } from 'class-transformer';
 
 export enum CabinClass {
-  ECONOMY = 'economy',
-  PREMIUM_ECONOMY = 'premium_economy',
-  BUSINESS = 'business',
-  FIRST = 'first',
+  ECONOMY = 'ECONOMY',
+  PREMIUM_ECONOMY = 'PREMIUM_ECONOMY',
+  BUSINESS = 'BUSINESS',
+  FIRST = 'FIRST',
 }
 
 export enum TripType {
@@ -45,6 +45,12 @@ export class FlightSearchDto {
   @Max(9)
   infants: number = 0;
 
+  @Type(() => Number)
+  @IsNumber()
+  @Min(1)
+  @Max(9)
+  passengers: number = 1; // <-- Add this line
+  
   @IsEnum(CabinClass)
   cabinClass: CabinClass = CabinClass.ECONOMY;
 
@@ -73,3 +79,19 @@ export class FlightSearchResponseDto {
   total: number;
   searchCriteria: FlightSearchDto;
 } 
+
+export class FlightResultDto {
+  id: string;
+  flightNumber: string;
+  airline: { id: string; name: string };
+  origin: { id: string; code: string; name: string; city: string; country: string };
+  destination: { id: string; code: string; name: string; city: string; country: string };
+  departureTime: string;
+  arrivalTime: string;
+  duration: number;
+  aircraft: { id: string; name: string; model: string; manufacturer: string };
+  status: string;
+  price: number;
+  cabinClass: string;
+  availableSeats: number;
+}

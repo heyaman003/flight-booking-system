@@ -28,6 +28,7 @@ export interface FlightDto {
   status: string;
   createdAt?: string;
   updatedAt?: string;
+  
 }
 
 export interface FlightSearchResponseDto {

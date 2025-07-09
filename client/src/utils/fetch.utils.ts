@@ -19,7 +19,7 @@ export const fetchApi = async ({
   };
 
   if (token) {
-    headers['Authorization'] = `Bearer ${token}`;
+    headers['Authorization'] = `${token}`;
   }
   if (refreshToken) {
     headers['x-refresh-token'] = `${refreshToken}`;

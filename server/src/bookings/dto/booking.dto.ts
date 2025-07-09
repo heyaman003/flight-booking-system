@@ -1,4 +1,4 @@
-import { IsString, IsNumber, IsArray, IsEnum, IsOptional, ValidateNested } from 'class-validator';
+import { IsString, IsNumber, IsArray, IsEnum, IsOptional, ValidateNested, IsDateString, Min, Max } from 'class-validator';
 import { Type } from 'class-transformer';
 import { CabinClass } from '../../flights/dto/flight.dto';
 
@@ -16,7 +16,7 @@ export class PassengerDto {
   @IsString()
   lastName: string;
 
-  @IsString()
+  @IsDateString()
   dateOfBirth: string;
 
   @IsString()
@@ -27,7 +27,22 @@ export class PassengerDto {
 
   @IsOptional()
   @IsString()
+  aadhaarNumber?: string;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  @Min(0)
+  @Max(120)
+  age?: number;
+
+  @IsOptional()
+  @IsString()
   seatNumber?: string;
+
+  @IsOptional()
+  @IsString()
+  specialRequests?: string;
 }
 
 export class CreateBookingDto {

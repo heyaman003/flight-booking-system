@@ -1,14 +1,21 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useCreateBooking, CreateBookingDto, PassengerDto } from '@/hooks/useBookings';
-import { FlightDto } from '@/hooks/useFlightSearch';
+import { FlightDto as OriginalFlightDto } from '@/hooks/useFlightSearch';
 import { toast } from 'sonner';
+import { useSelector } from 'react-redux';
+import { RootState } from '../../store';
+
+// Extend FlightDto to include airline_name (optional)
+interface FlightDto extends OriginalFlightDto {
+  airline_name?: string;
+}
 
 interface BookingModalProps {
   flight: FlightDto | null;
@@ -17,28 +24,45 @@ interface BookingModalProps {
   passengers: number;
 }
 
+// Update PassengerDto to include age and aadhaarNumber
+interface ExtendedPassengerDto extends PassengerDto {
+  age: string;
+  aadhaarNumber: string;
+}
+
+// Add frontend enum for cabin class to match backend
+export enum CabinClass {
+  ECONOMY = 'ECONOMY',
+  PREMIUM_ECONOMY = 'PREMIUM_ECONOMY',
+  BUSINESS = 'BUSINESS',
+  FIRST = 'FIRST',
+}
+
 export const BookingModal = ({ flight, isOpen, onClose, passengers }: BookingModalProps) => {
-  const [passengerDetails, setPassengerDetails] = useState<PassengerDto[]>([]);
-  const [cabinClass, setCabinClass] = useState('Economy');
+  const [passengerDetails, setPassengerDetails] = useState<ExtendedPassengerDto[]>([]);
+  const [cabinClass, setCabinClass] = useState(CabinClass.ECONOMY);
   const [specialRequests, setSpecialRequests] = useState('');
   
   const createBooking = useCreateBooking();
+  const { origin, destination } = useSelector((state: RootState) => state.search);
 
   // Initialize passenger details when modal opens
-  useState(() => {
+  useEffect(() => {
     if (isOpen && passengers > 0) {
-      const initialPassengers: PassengerDto[] = Array.from({ length: passengers }, (_, index) => ({
+      const initialPassengers: ExtendedPassengerDto[] = Array.from({ length: passengers }, (_, index) => ({
         firstName: '',
         lastName: '',
         dateOfBirth: '',
         passportNumber: '',
         nationality: '',
+        age: '',
+        aadhaarNumber: '',
       }));
       setPassengerDetails(initialPassengers);
     }
-  });
+  }, [isOpen, passengers]);
 
-  const handlePassengerChange = (index: number, field: keyof PassengerDto, value: string) => {
+  const handlePassengerChange = (index: number, field: keyof ExtendedPassengerDto, value: string) => {
     const updatedPassengers = [...passengerDetails];
     updatedPassengers[index] = { ...updatedPassengers[index], [field]: value };
     setPassengerDetails(updatedPassengers);
@@ -49,7 +73,8 @@ export const BookingModal = ({ flight, isOpen, onClose, passengers }: BookingMod
 
     // Validate passenger details
     const isValid = passengerDetails.every(passenger => 
-      passenger.firstName && passenger.lastName && passenger.dateOfBirth && passenger.nationality
+      passenger.firstName && passenger.lastName && passenger.dateOfBirth && 
+      passenger.nationality && passenger.age && passenger.aadhaarNumber
     );
 
     if (!isValid) {
@@ -57,10 +82,17 @@ export const BookingModal = ({ flight, isOpen, onClose, passengers }: BookingMod
       return;
     }
 
+    // Convert data to match backend expectations
+    const passengersToSend = passengerDetails.map(({ age, aadhaarNumber, ...rest }) => ({
+      ...rest,
+      age: parseInt(age), // Convert string to number
+      aadhaarNumber,
+    }));
+
     const bookingData: CreateBookingDto = {
       flightId: flight.id,
-      passengers: passengerDetails,
-      cabinClass,
+      passengers: passengersToSend,
+      cabinClass, // Use enum value directly
       specialRequests: specialRequests || undefined,
     };
 
@@ -92,35 +124,44 @@ export const BookingModal = ({ flight, isOpen, onClose, passengers }: BookingMod
                   <span className="text-gray-600">Flight:</span> {flight.flightNumber}
                 </div>
                 <div>
-                  <span className="text-gray-600">Airline:</span> {flight.airline}
+                  <span className="text-gray-600">Airline:</span> {flight.airline || flight.airline_name}
                 </div>
                 <div>
-                  <span className="text-gray-600">Route:</span> {flight.origin} → {flight.destination}
+                  <span className="text-gray-600">Route:</span> {origin} → {destination}
                 </div>
-                                 <div>
-                   <span className="text-gray-600">Duration:</span> {Math.floor(flight.duration / 60)}h {flight.duration % 60}m
-                 </div>
-                                 <div>
-                   <span className="text-gray-600">Departure:</span> {new Date(flight.departureTime).toLocaleString()}
-                 </div>
-                 <div>
-                   <span className="text-gray-600">Arrival:</span> {new Date(flight.arrivalTime).toLocaleString()}
-                 </div>
+                <div>
+                  <span className="text-gray-600">Duration:</span> {Math.floor(flight.duration / 60)}h {flight.duration % 60}m
+                </div>
+                <div>
+                  <span className="text-gray-600">Departure:</span> {new Date(flight.departureTime).toLocaleString()}
+                </div>
+                <div>
+                  <span className="text-gray-600">Arrival:</span> {new Date(flight.arrivalTime).toLocaleString()}
+                </div>
+                <div>
+                  <span className="text-gray-600">Cabin Class:</span> {cabinClass}
+                </div>
+                <div>
+                  <span className="text-gray-600">Available Seats:</span> {flight.availableSeats}
+                </div>
+                <div>
+                  <span className="text-gray-600">Status:</span> {flight.status}
+                </div>
               </div>
             </div>
 
             {/* Cabin Class Selection */}
             <div>
               <Label htmlFor="cabinClass">Cabin Class</Label>
-              <Select value={cabinClass} onValueChange={setCabinClass}>
+              <Select value={cabinClass} onValueChange={value => setCabinClass(value as CabinClass)}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="Economy">Economy</SelectItem>
-                  <SelectItem value="Premium Economy">Premium Economy</SelectItem>
-                  <SelectItem value="Business">Business</SelectItem>
-                  <SelectItem value="First">First Class</SelectItem>
+                  <SelectItem value={CabinClass.ECONOMY}>Economy</SelectItem>
+                  <SelectItem value={CabinClass.PREMIUM_ECONOMY}>Premium Economy</SelectItem>
+                  <SelectItem value={CabinClass.BUSINESS}>Business</SelectItem>
+                  <SelectItem value={CabinClass.FIRST}>First Class</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -158,6 +199,25 @@ export const BookingModal = ({ flight, isOpen, onClose, passengers }: BookingMod
                           type="date"
                           value={passenger.dateOfBirth}
                           onChange={(e) => handlePassengerChange(index, 'dateOfBirth', e.target.value)}
+                          required
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor={`age-${index}`}>Age *</Label>
+                        <Input
+                          id={`age-${index}`}
+                          type="number"
+                          value={passenger.age}
+                          onChange={(e) => handlePassengerChange(index, 'age', e.target.value)}
+                          required
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor={`aadhaarNumber-${index}`}>Aadhaar Number *</Label>
+                        <Input
+                          id={`aadhaarNumber-${index}`}
+                          value={passenger.aadhaarNumber}
+                          onChange={(e) => handlePassengerChange(index, 'aadhaarNumber', e.target.value)}
                           required
                         />
                       </div>
@@ -202,7 +262,7 @@ export const BookingModal = ({ flight, isOpen, onClose, passengers }: BookingMod
               <div className="flex justify-between items-center">
                 <div>
                   <p className="text-sm text-gray-600">Total Price ({passengers} passengers)</p>
-                  <p className="text-2xl font-bold text-blue-600">${totalPrice}</p>
+                  <p className="text-2xl font-bold text-blue-600">₹{totalPrice}</p>
                 </div>
                 <Button 
                   onClick={handleSubmit}

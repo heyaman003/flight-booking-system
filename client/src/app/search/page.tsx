@@ -5,18 +5,27 @@ import { FlightResults } from "@/components/search/Flight.Results";
 import { SearchFilters } from "@/components/search/Search.Filters";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { useFlightSearch, FlightSearchDto, FlightDto } from "@/hooks/useFlightSearch";
+import { useDispatch } from 'react-redux';
+import { setSearchParams } from '../../store';
 
 const Page = () => {
-  const [searchParams, setSearchParams] = useState<FlightSearchDto | null>(null);
+  const [searchParams, setSearchParamsState] = useState<FlightSearchDto | null>(null);
   const [filters, setFilters] = useState({
-    airline: "",
-    priceRange: [0, 2000],
-    departure: "",
-    duration: "",
+    priceRange: [2000, 20000] as [number, number],
+    airlines: [] as string[],
+    departureTime: '',
+    stops: [] as string[],
   });
+
+  const dispatch = useDispatch();
 
   // Use the flight search hook with caching
   const { data: searchData, isLoading, error } = useFlightSearch(searchParams);
+
+  // Extract unique airline names from the flight data
+  const airlineOptions = Array.from(
+    new Set((searchData?.flights || []).map((f: any) => f.airline_name).filter(Boolean))
+  );
 
   const handleSearch = async (searchData: any) => {
     // Transform the search form data to match the API format
@@ -29,7 +38,8 @@ const Page = () => {
       cabinClass: searchData.class || 'economy',
     };
     
-    setSearchParams(apiSearchParams);
+    setSearchParamsState(apiSearchParams);
+    dispatch(setSearchParams(apiSearchParams));
   };
 
   return (
@@ -48,7 +58,7 @@ const Page = () => {
           
           <div className="flex gap-8">
             <div className="w-1/4">
-              <SearchFilters filters={filters} onFiltersChange={setFilters} />
+              <SearchFilters filters={filters} onFiltersChange={setFilters} airlineOptions={airlineOptions} />
             </div>
             
             <div className="flex-1">
@@ -56,6 +66,7 @@ const Page = () => {
                 results={searchData?.flights || []} 
                 loading={isLoading}
                 passengers={searchParams?.passengers || 1}
+                filters={filters}
               />
             </div>
           </div>

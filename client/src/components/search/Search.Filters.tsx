@@ -7,17 +7,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 interface SearchFiltersProps {
   filters: any;
   onFiltersChange: (filters: any) => void;
+  airlineOptions: string[];
 }
 
-export const SearchFilters = ({ filters, onFiltersChange }: SearchFiltersProps) => {
-  const airlines = [
-    "United Airlines",
-    "American Airlines",
-    "Delta Airlines",
-    "Southwest Airlines",
-    "JetBlue Airways"
-  ];
-
+export const SearchFilters = ({ filters, onFiltersChange, airlineOptions }: SearchFiltersProps) => {
   return (
     <div className="space-y-6">
       <Card>
@@ -30,23 +23,32 @@ export const SearchFilters = ({ filters, onFiltersChange }: SearchFiltersProps) 
             <Slider
               value={filters.priceRange}
               onValueChange={(value) => onFiltersChange({...filters, priceRange: value})}
-              max={2000}
-              min={0}
+              max={20000}
+              min={2000}
               step={50}
               className="w-full"
             />
             <div className="flex justify-between text-sm text-gray-600 mt-2">
-              <span>${filters.priceRange[0]}</span>
-              <span>${filters.priceRange[1]}</span>
+              <span>₹{filters.priceRange[0]}</span>
+              <span>₹{filters.priceRange[1]}</span>
             </div>
           </div>
 
           <div>
             <Label className="text-sm font-medium mb-3 block">Airlines</Label>
             <div className="space-y-2">
-              {airlines.map((airline) => (
+              {airlineOptions.map((airline) => (
                 <div key={airline} className="flex items-center space-x-2">
-                  <Checkbox id={airline} />
+                  <Checkbox
+                    id={airline}
+                    checked={filters.airlines.includes(airline)}
+                    onCheckedChange={(checked) => {
+                      const newAirlines = checked
+                        ? [...filters.airlines, airline]
+                        : filters.airlines.filter((a: string) => a !== airline);
+                      onFiltersChange({ ...filters, airlines: newAirlines });
+                    }}
+                  />
                   <Label htmlFor={airline} className="text-sm">{airline}</Label>
                 </div>
               ))}
@@ -55,7 +57,10 @@ export const SearchFilters = ({ filters, onFiltersChange }: SearchFiltersProps) 
 
           <div>
             <Label className="text-sm font-medium mb-3 block">Departure Time</Label>
-            <Select>
+            <Select
+              value={filters.departureTime}
+              onValueChange={(value) => onFiltersChange({ ...filters, departureTime: value })}
+            >
               <SelectTrigger>
                 <SelectValue placeholder="Any time" />
               </SelectTrigger>
@@ -71,18 +76,23 @@ export const SearchFilters = ({ filters, onFiltersChange }: SearchFiltersProps) 
           <div>
             <Label className="text-sm font-medium mb-3 block">Stops</Label>
             <div className="space-y-2">
-              <div className="flex items-center space-x-2">
-                <Checkbox id="nonstop" />
-                <Label htmlFor="nonstop" className="text-sm">Nonstop</Label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <Checkbox id="1stop" />
-                <Label htmlFor="1stop" className="text-sm">1 Stop</Label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <Checkbox id="2stops" />
-                <Label htmlFor="2stops" className="text-sm">2+ Stops</Label>
-              </div>
+              {['nonstop', '1stop', '2stops'].map((stop) => (
+                <div key={stop} className="flex items-center space-x-2">
+                  <Checkbox
+                    id={stop}
+                    checked={filters.stops.includes(stop)}
+                    onCheckedChange={(checked) => {
+                      const newStops = checked
+                        ? [...filters.stops, stop]
+                        : filters.stops.filter((s: string) => s !== stop);
+                      onFiltersChange({ ...filters, stops: newStops });
+                    }}
+                  />
+                  <Label htmlFor={stop} className="text-sm">
+                    {stop === 'nonstop' ? 'Nonstop' : stop === '1stop' ? '1 Stop' : '2+ Stops'}
+                  </Label>
+                </div>
+              ))}
             </div>
           </div>
         </CardContent>

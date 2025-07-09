@@ -162,6 +162,16 @@ export class SupabaseService {
     return result;
   }
 
+  async updateWhere(table: string, where: Record<string, any>, data: any) {
+    let queryBuilder = this.supabase.from(table).update(data);
+    Object.keys(where).forEach(key => {
+      queryBuilder = queryBuilder.eq(key, where[key]);
+    });
+    const { data: result, error } = await queryBuilder.select();
+    if (error) throw error;
+    return result;
+  }
+
   async delete(table: string, id: string) {
     const { error } = await this.supabase
       .from(table)

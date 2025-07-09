@@ -11,6 +11,7 @@ import { EmailService } from './common/services/email.service';
 import { SseService } from './common/services/sse.service';
 import { SseController } from './common/controllers/sse.controller';
 import configuration from './config/configuration';
+import { AirportsModule } from './airports/airports.module';
 
 @Module({
   imports: [
@@ -23,6 +24,7 @@ import configuration from './config/configuration';
     UsersModule,
     FlightsModule,
     BookingsModule,
+    AirportsModule,
   ],
   controllers: [ SseController],
   providers: [AppService, SupabaseService, EmailService, SseService],

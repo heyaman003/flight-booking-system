@@ -22,26 +22,42 @@ export class BookingsService {
   async createBooking(userId: string, createBookingDto: CreateBookingDto): Promise<BookingResponseDto> {
     const { flightId, passengers, cabinClass, returnFlightId, specialRequests } = createBookingDto;
 
-    // Get flight details
-    const flight = await this.flightsService.getFlightById(flightId);
-    
+    // Fetch price for the selected flight and cabin class
+    const priceResult = await this.supabaseService.query('flight_prices', {
+      flight_id: flightId,
+      cabin_class: cabinClass,
+    });
+    if (!priceResult || priceResult.length === 0) {
+      throw new BadRequestException('No price found for this flight and cabin class');
+    }
+    const price = priceResult[0].price;
+
+    // Fetch available seats for the selected flight and cabin class
+    const seatResult = await this.supabaseService.query('flight_seats', {
+      flight_id: flightId,
+      cabin_class: cabinClass,
+    });
+    if (!seatResult || seatResult.length === 0) {
+      throw new BadRequestException('No seat info found for this flight and cabin class');
+    }
+    const availableSeats = seatResult[0].available_seats;
+
     // Check if enough seats are available
-    if (flight.availableSeats < passengers.length) {
+    if (availableSeats < passengers.length) {
       throw new BadRequestException('Not enough seats available');
     }
 
     // Calculate total price
-    const totalPrice = flight.price * passengers.length;
-
+    const totalPrice = price * passengers.length;
+  
     // Generate booking reference
     const bookingReference = this.generateBookingReference();
 
-    // Create booking data
+    // Create booking data (without passengers - they'll be stored separately)
     const bookingData = {
       user_id: userId,
       flight_id: flightId,
       return_flight_id: returnFlightId || null,
-      passengers: JSON.stringify(passengers),
       cabin_class: cabinClass,
       total_price: totalPrice,
       status: BookingStatus.PENDING,
@@ -54,11 +70,40 @@ export class BookingsService {
     // Insert booking into database
     const booking = await this.supabaseService.insert('bookings', bookingData);
 
-    // Update available seats
-    await this.flightsService.updateAvailableSeats(flightId, passengers.length);
+    // Insert passengers into passengers table
+    const passengerPromises = passengers.map(passenger => {
+      const passengerData = {
+        booking_id: booking.id,
+        first_name: passenger.firstName,
+        last_name: passenger.lastName,
+        date_of_birth: passenger.dateOfBirth,
+        passport_number: passenger.passportNumber,
+        nationality: passenger.nationality,
+        aadhaar_number: passenger.aadhaarNumber || null,
+        age: passenger.age || null,
+        seat_number: passenger.seatNumber || null,
+        special_requests: passenger.specialRequests || null,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      };
+      return this.supabaseService.insert('passengers', passengerData);
+    });
+
+    await Promise.all(passengerPromises);
+
+    // Update available seats in flight_seats table
+    await this.supabaseService.updateWhere(
+      'flight_seats',
+      { flight_id: flightId, cabin_class: cabinClass },
+      { available_seats: availableSeats - passengers.length }
+    );
 
     // Generate e-ticket
     const eTicket = this.generateETicket(booking.id);
+
+    // Get passengers for the response
+    const storedPassengers = await this.supabaseService.query('passengers', { booking_id: booking.id });
+    const passengersDto = this.mapPassengersToDto(storedPassengers);
 
     // Transform to DTO
     const bookingDto: BookingDto = {
@@ -66,7 +111,7 @@ export class BookingsService {
       userId: booking.user_id,
       flightId: booking.flight_id,
       returnFlightId: booking.return_flight_id,
-      passengers: JSON.parse(booking.passengers),
+      passengers: passengersDto,
       cabinClass: booking.cabin_class,
       totalPrice: booking.total_price,
       status: booking.status as BookingStatus,
@@ -99,12 +144,17 @@ export class BookingsService {
     }
 
     const booking = bookings[0];
+
+    // Get passengers for this booking
+    const passengers = await this.supabaseService.query('passengers', { booking_id: bookingId });
+    const passengersDto = this.mapPassengersToDto(passengers);
+
     return {
       id: booking.id,
       userId: booking.user_id,
       flightId: booking.flight_id,
       returnFlightId: booking.return_flight_id,
-      passengers: JSON.parse(booking.passengers),
+      passengers: passengersDto,
       cabinClass: booking.cabin_class,
       totalPrice: booking.total_price,
       status: booking.status as BookingStatus,
@@ -125,12 +175,16 @@ export class BookingsService {
 
     const updatedBooking = await this.supabaseService.update('bookings', bookingId, updateData);
 
+    // Get passengers for this booking
+    const passengers = await this.supabaseService.query('passengers', { booking_id: bookingId });
+    const passengersDto = this.mapPassengersToDto(passengers);
+
     const bookingDto: BookingDto = {
       id: updatedBooking.id,
       userId: updatedBooking.user_id,
       flightId: updatedBooking.flight_id,
       returnFlightId: updatedBooking.return_flight_id,
-      passengers: JSON.parse(updatedBooking.passengers),
+      passengers: passengersDto,
       cabinClass: updatedBooking.cabin_class,
       totalPrice: updatedBooking.total_price,
       status: updatedBooking.status as BookingStatus,
@@ -172,20 +226,30 @@ export class BookingsService {
   async getUserBookings(userId: string): Promise<BookingDto[]> {
     const bookings = await this.supabaseService.query('bookings', { user_id: userId });
     
-    return bookings.map((booking: any) => ({
-      id: booking.id,
-      userId: booking.user_id,
-      flightId: booking.flight_id,
-      returnFlightId: booking.return_flight_id,
-      passengers: JSON.parse(booking.passengers),
-      cabinClass: booking.cabin_class,
-      totalPrice: booking.total_price,
-      status: booking.status as BookingStatus,
-      bookingReference: booking.booking_reference,
-      specialRequests: booking.special_requests,
-      createdAt: booking.created_at,
-      updatedAt: booking.updated_at,
-    }));
+    const bookingsWithPassengers = await Promise.all(
+      bookings.map(async (booking: any) => {
+        // Get passengers for this booking
+        const passengers = await this.supabaseService.query('passengers', { booking_id: booking.id });
+        const passengersDto = this.mapPassengersToDto(passengers);
+
+        return {
+          id: booking.id,
+          userId: booking.user_id,
+          flightId: booking.flight_id,
+          returnFlightId: booking.return_flight_id,
+          passengers: passengersDto,
+          cabinClass: booking.cabin_class,
+          totalPrice: booking.total_price,
+          status: booking.status as BookingStatus,
+          bookingReference: booking.booking_reference,
+          specialRequests: booking.special_requests,
+          createdAt: booking.created_at,
+          updatedAt: booking.updated_at,
+        };
+      })
+    );
+    
+    return bookingsWithPassengers;
   }
 
   private generateBookingReference(): string {
@@ -199,5 +263,19 @@ export class BookingsService {
 
   private generateETicket(bookingId: string): string {
     return `ET-${bookingId.substring(0, 8).toUpperCase()}-${Date.now().toString(36).toUpperCase()}`;
+  }
+
+  private mapPassengersToDto(passengers: any[]): PassengerDto[] {
+    return passengers.map((p: any) => ({
+      firstName: p.first_name,
+      lastName: p.last_name,
+      dateOfBirth: p.date_of_birth,
+      passportNumber: p.passport_number,
+      nationality: p.nationality,
+      aadhaarNumber: p.aadhaar_number,
+      age: p.age,
+      seatNumber: p.seat_number,
+      specialRequests: p.special_requests,
+    }));
   }
 } 

@@ -1,13 +1,13 @@
 import { Injectable } from '@nestjs/common';
 import { SupabaseService } from '../config/supabase.service';
-import { FlightSearchDto, FlightDto, FlightSearchResponseDto, CabinClass } from './dto/flight.dto';
+import { FlightSearchDto, FlightDto, FlightSearchResponseDto, CabinClass, FlightResultDto } from './dto/flight.dto';
 
 @Injectable()
 export class FlightsService {
   constructor(private supabaseService: SupabaseService) {}
 
   async searchFlights(searchDto: FlightSearchDto): Promise<FlightSearchResponseDto> {
-    const { origin, destination, departureDate, cabinClass } = searchDto;
+    const { origin, destination, departureDate, cabinClass,passengers } = searchDto;
 
     // Build query for flights
     let query = {
@@ -24,14 +24,16 @@ export class FlightsService {
     endOfDay.setHours(23, 59, 59, 999);
 
     // Get flights from database
-    const flights = await this.supabaseService.query('flights', query);
-    
+   const flights = await this.supabaseService.query('flight_denormalized', {});    
     // Filter flights by date and available seats
     const filteredFlights = flights.filter((flight: any) => {
       const flightDate = new Date(flight.departure_time);
       const isDateMatch = flightDate >= startOfDay && flightDate <= endOfDay;
-      const hasAvailableSeats = flight.available_seats > 0;
-      return isDateMatch && hasAvailableSeats;
+      console.log("cabin class",cabinClass);
+      console.log("flight.cabin_class",flight.cabin_class);
+      const isClass = flight.cabin_class.toLowerCase() === cabinClass.toLowerCase();
+      const hasEnoughSeats = flight.available_seats >= passengers;
+      return isDateMatch && isClass && hasEnoughSeats;
     });
 
     // Transform to DTO format
@@ -49,6 +51,7 @@ export class FlightsService {
       cabinClass: flight.cabin_class as CabinClass,
       aircraft: flight.aircraft,
       status: flight.status,
+      airline_name:flight.airline_name,
     }));
 
     return {
@@ -115,6 +118,13 @@ export class FlightsService {
       cabinClass: flight.cabin_class,
       aircraft: flight.aircraft,
       status: flight.status,
+      airline_name:flight.airline_name,
     }));
   }
+  async getAllFlightsDenormalized(): Promise<FlightResultDto[]> {
+    const flights = await this.supabaseService.query('flight_denormalized', {});
+    return flights;
+  }
 } 
+
+

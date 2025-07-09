@@ -9,6 +9,14 @@ import { cn } from "@/lib/utils";
 import { Autocomplete } from "@/components/ui/autocomplete";
 import { useAirportSearch, Airport } from "@/hooks/useAirports";
 
+// Add frontend enum for cabin class to match backend
+export enum CabinClass {
+  ECONOMY = 'ECONOMY',
+  PREMIUM_ECONOMY = 'PREMIUM_ECONOMY',
+  BUSINESS = 'BUSINESS',
+  FIRST = 'FIRST',
+}
+
 interface SearchFormProps {
   onSearch?: (params: any) => void;
   compact?: boolean;
@@ -22,7 +30,7 @@ export const SearchForm = ({ onSearch, compact = false }: SearchFormProps) => {
     departureDate: "",
     returnDate: "",
     passengers: "1",
-    class: "economy",
+    class: CabinClass.ECONOMY,
   });
 
   // Airport search hooks
@@ -167,15 +175,15 @@ export const SearchForm = ({ onSearch, compact = false }: SearchFormProps) => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>Class</Label>
-                <Select value={searchParams.class} onValueChange={(value) => setSearchParams({...searchParams, class: value})}>
+                <Select value={searchParams.class} onValueChange={(value) => setSearchParams({...searchParams, class: value as CabinClass})}>
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="economy">Economy</SelectItem>
-                    <SelectItem value="premium-economy">Premium Economy</SelectItem>
-                    <SelectItem value="business">Business</SelectItem>
-                    <SelectItem value="first">First Class</SelectItem>
+                    <SelectItem value={CabinClass.ECONOMY}>Economy</SelectItem>
+                    <SelectItem value={CabinClass.PREMIUM_ECONOMY}>Premium Economy</SelectItem>
+                    <SelectItem value={CabinClass.BUSINESS}>Business</SelectItem>
+                    <SelectItem value={CabinClass.FIRST}>First Class</SelectItem>
                   </SelectContent>
                 </Select>
               </div>

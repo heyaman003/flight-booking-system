@@ -1,6 +1,10 @@
 # Flight Booking System API
 
-A comprehensive Flight Booking System API built with NestJS, featuring user authentication, flight search, booking management, and real-time updates using Server-Sent Events (SSE).
+👉 **See full architecture and module breakdown in [ARCHITECTURE.md](./ARCHITECTURE.md)**
+
+A robust, modular flight booking backend built with NestJS, featuring authentication, flight search, booking management, real-time updates, and more.
+
+---
 
 ## Features
 
