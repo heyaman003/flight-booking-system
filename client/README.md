@@ -96,7 +96,7 @@ Welcome to the Flight Booking App! This guide will walk you through using the ap
 1. **Open the app in your browser** (usually at [http://localhost:3000](http://localhost:3000) if running locally).
 2. **Sign up or log in** to your account.
 
-![Login Page](./public/Screenshot%202025-07-10%20at%2010.04.08%E2%80%AFPM.png)
+![Login Page](./public/Screenshot%202025-07-10%20at%201.04.08%E2%80%AFPM.png)
 
 ---
 
@@ -110,7 +110,7 @@ Welcome to the Flight Booking App! This guide will walk you through using the ap
    - **Passengers & Class:** Select as needed
 2. Click **Search Flights**.
 
-![Search Form](./public/Screenshot%202025-07-10%20at%2010.04.44%E2%80%AFPM.png)
+![Search Form](./public/Screenshot%202025-07-10%20at%2010.0444%E2%80%AFPM.png)
 
 ---
 
@@ -120,7 +120,7 @@ Welcome to the Flight Booking App! This guide will walk you through using the ap
 2. Click **Book** on your preferred flight.
 3. Fill in passenger details and confirm your booking.
 
-![Flight Results](./public/Screenshot%202025-07-10%20at%2010.04.51%E2%80%AFPM.png)
+![Flight Results](./public/Screenshot%202025-07-10%20at%m2010.04.51%E2%80%AFPM.png)
 
 ---
 
@@ -129,7 +129,7 @@ Welcome to the Flight Booking App! This guide will walk you through using the ap
 1. Go to your **Profile** or **Booking History** page.
 2. See all your current and past bookings.
 
-![Booking History](./public/Screenshot%202025-07-10%20at%2010.04.56%E2%80%AFPM.png)
+![Booking History](./publi/Screenshot%202025-07-10%20at%2010.04.56%E2%80%AFPM.png)
 
 ---
 
@@ -141,7 +141,7 @@ Welcome to the Flight Booking App! This guide will walk you through using the ap
 - **Screenshots:**
   - More screenshots are available in the `public/` folder for reference.
 
-![Sample Search](./public/Screenshot%202025-07-10%20at%2010.05.10%E2%80%AFPM.png)
+![Sample Search](./public/Screenshot%202025-07-10%20a%2010.05.10%E2%80%AFPM.png)
 
 ---
 
@@ -149,31 +149,31 @@ Welcome to the Flight Booking App! This guide will walk you through using the ap
 
 Below are all screenshots available in the `public/` folder, with a brief description of their use case:
 
-- ![Login Page](./public/Screenshot%202025-07-10%20at%2010.04.08%E2%80%AFPM.png)
+- ![Login Page](./public/Screenshot%202025-07-10%20a%2010.04.08%E2%80%AFPM.png)
   - **Login/Signup Screen:** The entry point for users to sign in or create an account.
-- ![Flight Search Form](./public/Screenshot%202025-07-10%20at%2010.04.44%E2%80%AFPM.png)
+- ![Flight Search Form](./public/Screenshot%202025-07-10%20a%2010.04.44%E2%80%AFPM.png)
   - **Flight Search Form:** Where users enter their flight search criteria.
-- ![Flight Results](./public/Screenshot%202025-07-10%20at%2010.04.51%E2%80%AFPM.png)
+- ![Flight Results](./public/Screenshot%202025-07-10%20a%2010.04.51%E2%80%AFPM.png)
   - **Flight Results:** Displays available flights based on the search.
-- ![Booking History](./public/Screenshot%202025-07-10%20at%2010.04.56%E2%80%AFPM.png)
+- ![Booking History](./public/Screenshot%202025-07-10%20a%2010.04.56%E2%80%AFPM.png)
   - **Booking History:** Shows a user's past and current bookings.
-- ![Booking Modal](./public/Screenshot%202025-07-10%20at%2010.04.27%E2%80%AFPM.png)
+- ![Booking Modal](./public/Screenshot%202025-07-1020at%2010.04.27%E2%80%AFPM.png)
   - **Booking Modal:** The modal where users enter passenger details and confirm a booking.
-- ![Booking Confirmation](./public/Screenshot%202025-07-10%20at%2010.04.01%E2%80%AFPM.png)
+- ![Booking Confirmation](./public/Screenshot%202025-07-1020at%2010.04.01%E2%80%AFPM.png)
   - **Booking Confirmation:** Confirmation screen after a successful booking.
-- ![User Profile](./public/Screenshot%202025-07-10%20at%2010.03.32%E2%80%AFPM.png)
+- ![User Profile](./public/Screenshot%202025-07-10%20a%2010.03.32%E2%80%AFPM.png)
   - **User Profile:** Displays user information and settings.
-- ![Edit Profile](./public/Screenshot%202025-07-10%20at%2010.03.22%E2%80%AFPM.png)
+- ![Edit Profile](./publi/Screenshot%202025-07-10%20at%2010.03.22%E2%80%AFPM.png)
   - **Edit Profile:** Allows users to update their profile details.
-- ![Flight Details](./public/Screenshot%202025-07-10%20at%2010.03.15%E2%80%AFPM.png)
+- ![Flight Details](./public/Screenshot%202025-07-10%20a%2010.03.15%E2%80%AFPM.png)
   - **Flight Details:** Shows detailed information about a selected flight.
-- ![Payment Page](./public/Screenshot%202025-07-10%20at%2010.02.59%E2%80%AFPM.png)
+- ![Payment Page](.public/Screenshot%202025-07-10%20at%2010.02.59%E2%80%AFPM.png)
   - **Payment Page:** Where users enter payment information to complete a booking.
-- ![Payment Success](./public/Screenshot%202025-07-10%20at%2010.02.51%E2%80%AFPM.png)
+- ![Payment Success](./public/Screenshot%202025-07-10%20a%2010.02.51%E2%80%AFPM.png)
   - **Payment Success:** Confirmation of successful payment.
-- ![Error/Empty State](./public/Screenshot%202025-07-10%20at%2010.02.43%E2%80%AFPM.png)
+- ![Error/Empty State](./publi/Screenshot%202025-07-10%20at%2010.02.43%E2%80%AFPM.png)
   - **Error/Empty State:** Shown when no results are found or an error occurs.
-- ![Sample Search](./public/Screenshot%202025-07-10%20at%2010.05.10%E2%80%AFPM.png)
+- ![Sample Search](./public/Screenshot%202025-07-1020at%2010.05.10%E2%80%AFPM.png)
   - **Sample Search:** Example of a successful search with results.
 
 ---
