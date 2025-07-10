@@ -73,6 +73,13 @@ export const SearchForm = ({ onSearch, compact = false }: SearchFormProps) => {
     }));
   };
 
+  const handleTripTypeChange = (type: string) => {
+    setTripType(type);
+    if (type === 'one-way') {
+      setSearchParams(prev => ({ ...prev, returnDate: '' }));
+    }
+  };
+
   return (
     <Card className={cn("w-full", compact ? "shadow-md" : "shadow-xl")}>
       <CardContent className="p-6">
@@ -82,7 +89,7 @@ export const SearchForm = ({ onSearch, compact = false }: SearchFormProps) => {
               <Button
                 type="button"
                 variant={tripType === "round-trip" ? "default" : "outline"}
-                onClick={() => setTripType("round-trip")}
+                onClick={() => handleTripTypeChange("round-trip")}
                 className="flex-1"
               >
                 Round Trip
@@ -90,7 +97,7 @@ export const SearchForm = ({ onSearch, compact = false }: SearchFormProps) => {
               <Button
                 type="button"
                 variant={tripType === "one-way" ? "default" : "outline"}
-                onClick={() => setTripType("one-way")}
+                onClick={() => handleTripTypeChange("one-way")}
                 className="flex-1"
               >
                 One Way
@@ -136,21 +143,19 @@ export const SearchForm = ({ onSearch, compact = false }: SearchFormProps) => {
                   onChange={(e) => setSearchParams({...searchParams, departureDate: e.target.value})}
                 />
               </div>
-              
-              {(tripType === "round-trip" || !compact) && (
-                <div className="space-y-2">
-                  <Label htmlFor="return" className="flex items-center gap-2">
-                    <Calendar className="h-4 w-4" />
-                    Return
-                  </Label>
-                  <Input
-                    id="return"
-                    type="date"
-                    value={searchParams.returnDate}
-                    onChange={(e) => setSearchParams({...searchParams, returnDate: e.target.value})}
-                  />
-                </div>
-              )}
+              <div className="space-y-2">
+                <Label htmlFor="return" className="flex items-center gap-2">
+                  <Calendar className="h-4 w-4" />
+                  Return
+                </Label>
+                <Input
+                  id="return"
+                  type="date"
+                  value={searchParams.returnDate}
+                  onChange={(e) => setSearchParams({...searchParams, returnDate: e.target.value})}
+                  disabled={tripType === 'one-way'}
+                />
+              </div>
               
               <div className="space-y-2">
                 <Label className="flex items-center gap-2">

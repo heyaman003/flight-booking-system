@@ -41,6 +41,10 @@ export const useAuthMutation = (type: AuthType) => {
     onSuccess: (res) => {
       console.log(`${type} successful!`, res);
       
+      if (type === 'signup') {
+        toast.success('We have sent you an email verification. Please check your inbox to verify your account.');
+      }
+      
       if (type === 'login' && res?.data?.accessToken) {
         console.log('Login successful, setting auth state...');
         
