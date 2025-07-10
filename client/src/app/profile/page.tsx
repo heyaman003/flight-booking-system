@@ -11,10 +11,12 @@ import { useApiMutation } from '@/hooks/useApiMutation';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { useState } from 'react';
+import { useUserProfile } from '@/hooks/useUserProfile';
 
 export default function ProfilePage() {
   const { user, logout } = useAuth();
   const { data: bookings, isLoading: bookingsLoading } = useUserBookings();
+  const { data: userProfile, isLoading: profileLoading, refetch } = useUserProfile();
   const cancelBooking = useCancelBooking();
   const changePasswordMutation = useApiMutation();
   const editProfileMutation = useApiMutation();
@@ -99,15 +101,16 @@ export default function ProfilePage() {
   };
 
   // Update form fields on open
-  const openEditProfile = () => {
+  const openEditProfile = async() => {
+    await refetch();
     setProfileForm({
-      firstName: user?.firstName || '',
-      lastName: user?.lastName || '',
-      phone: (user as any)?.phone || '',
-      address: (user as any)?.address || '',
-      city: (user as any)?.city || '',
-      country: (user as any)?.country || '',
-      postalCode: (user as any)?.postalCode || '',
+      firstName: userProfile?.firstName || '',
+      lastName: userProfile?.lastName || '',
+      phone: userProfile?.phone || '',
+      address: userProfile?.address || '',
+      city: userProfile?.city || '',
+      country: userProfile?.country || '',
+      postalCode: userProfile?.postalCode || '',
     });
     setProfileError('');
     setShowEditProfile(true);

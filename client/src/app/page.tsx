@@ -87,33 +87,7 @@ const Home = () => {
           </div>
         </section>
 
-        {/* CTA Section */}
-        <section className="py-20 bg-blue-600 text-white">
-          <div className="container mx-auto px-4 text-center">
-            <h2 className="text-4xl font-bold mb-6">
-              Ready to Book Your Next Adventure?
-            </h2>
-            <p className="text-xl text-blue-100 mb-8 max-w-2xl mx-auto">
-              Join millions of travelers who trust FlightBook for their flight booking needs.
-            </p>
-            <div className="space-x-4">
-              <Button 
-                size="lg" 
-                className="bg-white text-blue-600 hover:bg-gray-100"
-                onClick={() => router.push("/search")}
-              >
-                Search Flights
-              </Button>
-              <Button 
-                size="lg" 
-                variant="outline" 
-                className="border-white text-white hover:bg-white hover:text-blue-600"
-              >
-                Learn More
-              </Button>
-            </div>
-          </div>
-        </section>
+
       </div>
     </ProtectedRoute>
   );
