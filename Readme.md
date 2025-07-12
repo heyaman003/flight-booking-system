@@ -14,7 +14,7 @@ Welcome to the Flight Booking System monorepo! This project is a full-stack appl
 
 ---
 ## FOr demo
-```mermaid
+```
 http://54.169.144.111/
 ```
 
