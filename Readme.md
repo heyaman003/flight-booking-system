@@ -13,6 +13,10 @@ Welcome to the Flight Booking System monorepo! This project is a full-stack appl
 6. [Further Reading](#further-reading)
 
 ---
+## FOr demo
+```mermaid
+http://54.169.144.111/
+```
 
 ## Project Overview
 This system allows users to:
